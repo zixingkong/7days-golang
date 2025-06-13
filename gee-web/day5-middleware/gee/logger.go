@@ -15,3 +15,10 @@ func Logger() HandlerFunc {
 		log.Printf("[%d] %s in %v", c.StatusCode, c.Req.RequestURI, time.Since(t))
 	}
 }
+
+func MyMiddleware() HandlerFunc {
+	return func(c *Context) {
+		log.Println("MyMiddleware")
+		c.Next()
+	}
+}

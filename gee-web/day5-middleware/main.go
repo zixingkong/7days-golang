@@ -39,20 +39,34 @@ func onlyForV2() gee.HandlerFunc {
 }
 
 func main() {
+	// 创建Gee引擎实例
 	r := gee.New()
-	r.Use(gee.Logger()) // global midlleware
+
+	// 注册全局中间件（对所有路由生效）
+	r.Use(gee.Logger())       // 请求日志记录中间件
+	r.Use(gee.MyMiddleware()) // 自定义全局中间件
+
+	// 注册根路由
 	r.GET("/", func(c *gee.Context) {
+		// 返回HTML响应，状态码200
 		c.HTML(http.StatusOK, "<h1>Hello Gee</h1>")
 	})
 
+	// 创建v2版本路由组（路径前缀为/v2）
 	v2 := r.Group("/v2")
-	v2.Use(onlyForV2()) // v2 group middleware
+	// 注册v2组专属中间件（仅对/v2开头的路由生效）
+	v2.Use(onlyForV2())
+
+	// 在v2路由组中注册子路由
 	{
+		// 注册动态路由，匹配格式为 /v2/hello/{name}
 		v2.GET("/hello/:name", func(c *gee.Context) {
-			// expect /hello/geektutu
+			// 从URL参数中获取name值，示例：/hello/geektutu -> name=geektutu
+			// 返回格式化字符串响应，状态码200
 			c.String(http.StatusOK, "hello %s, you're at %s\n", c.Param("name"), c.Path)
 		})
 	}
 
+	// 启动服务器并监听9999端口
 	r.Run(":9999")
 }

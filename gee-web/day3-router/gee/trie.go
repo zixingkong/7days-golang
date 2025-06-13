@@ -6,10 +6,10 @@ import (
 )
 
 type node struct {
-	pattern  string
-	part     string
-	children []*node
-	isWild   bool
+	pattern  string  // 完整路由路径（例如 "/user/:id"）
+	part     string  // 当前节点的路由部分（例如 ":id"）
+	children []*node // 子节点列表
+	isWild   bool    // 是否是通配符节点（part 以 : 或 * 开头）
 }
 
 func (n *node) String() string {
