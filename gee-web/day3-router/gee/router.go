@@ -33,6 +33,7 @@ func parsePattern(pattern string) []string {
 	return parts
 }
 
+// 添加路由
 func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 	parts := parsePattern(pattern)
 
@@ -46,31 +47,42 @@ func (r *router) addRoute(method string, pattern string, handler HandlerFunc) {
 }
 
 func (r *router) getRoute(method string, path string) (*node, map[string]string) {
+	// 1. 解析请求路径为分段数组（如/user/profile → ["user", "profile"]）
 	searchParts := parsePattern(path)
-	params := make(map[string]string)
-	root, ok := r.roots[method]
 
+	// 2. 创建动态参数存储map
+	params := make(map[string]string)
+
+	// 3. 获取对应HTTP方法的路由树根节点
+	root, ok := r.roots[method]
 	if !ok {
-		return nil, nil
+		return nil, nil // 方法不存在时返回空
 	}
 
+	// 4. 在路由树中搜索匹配节点（核心搜索逻辑）
 	n := root.search(searchParts, 0)
 
 	if n != nil {
+		// 5. 解析匹配节点的原始模式（如/user/:id）
 		parts := parsePattern(n.pattern)
+
+		// 6. 提取动态参数：
 		for index, part := range parts {
+			// 6.1 处理冒号参数（如:name）
 			if part[0] == ':' {
 				params[part[1:]] = searchParts[index]
 			}
+			// 6.2 处理通配符参数（如*filepath）
 			if part[0] == '*' && len(part) > 1 {
+				// 捕获剩余所有路径段
 				params[part[1:]] = strings.Join(searchParts[index:], "/")
-				break
+				break // 通配符后不再解析
 			}
 		}
-		return n, params
+		return n, params // 返回匹配节点和参数
 	}
 
-	return nil, nil
+	return nil, nil // 无匹配路由
 }
 
 func (r *router) getRoutes(method string) []*node {
